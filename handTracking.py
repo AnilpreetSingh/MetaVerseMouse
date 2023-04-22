@@ -1,8 +1,34 @@
 import cv2
 import mediapipe as mp
+from mouseMovement import pointMain
 import time
 from  imutils import resize
+import queue
 #--------------------------------------------------------------------------------------------------------------------------
+   
+def detectfingers(landmark_matrix,myHandType):
+    tipIds = [4, 8, 12, 16, 20]
+    if landmark_matrix:
+        fingers = []
+        # Thumb
+        if myHandType == "Right":
+            if landmark_matrix[tipIds[0]][0] > landmark_matrix[tipIds[0] - 1][0]:
+                fingers.append(1)
+            else:
+                fingers.append(0)
+        else:
+            if landmark_matrix[tipIds[0]][0] < landmark_matrix[tipIds[0] - 1][0]:
+                fingers.append(1)
+            else:
+                fingers.append(0)
+
+        # 4 Fingers
+        for id in range(1, 5):
+            if landmark_matrix[tipIds[id]][1] < landmark_matrix[tipIds[id] - 2][1]:
+                fingers.append(1)
+            else:
+                fingers.append(0)
+    return fingers
 
 def detectHands(image, hands, draw=True,flipType=True):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) #Mediapipe works in RGB
@@ -44,8 +70,7 @@ def draw_landmarks(image,hand_landmarks):
 
 def main():
 
-    cameraresX=900
-    cameraresY=900
+  
     # mm.setglobalvars(cameraresX,cameraresY)
     cap=cv2.VideoCapture(0)
     # cap.set(cv2.CAP_PROP_FRAME_WIDTH, cameraresX)
@@ -53,10 +78,10 @@ def main():
     
     mp_hands = mp.solutions.hands
     hands= mp_hands.Hands(
-        # model_complexity=0,
+        model_complexity=1,
         min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-        # min_hand_presence_confidence=0.3,
+        min_tracking_confidence=0.75,
+
         max_num_hands=1,
         # static_image_mode=False
     )
@@ -69,6 +94,11 @@ def main():
     total_itrs=0
     mm_module_time=0
     mm_prev_time=0
+
+    numClicksPermited=3 
+    opQueue=queue.Queue(3+numClicksPermited)  
+    lastIndexX,lastIndexY=0,0   
+    centrePoseX,centrePoseY=0,0
 
     while cap.isOpened(): 
 
@@ -87,7 +117,9 @@ def main():
 
             # functions that operates the mouse 
 
-            # fingers_matrix=pointMain(landmark_matrix,handType)
+            fingers_matrix=detectfingers(landmark_matrix,handType)
+            opQueue, lastIndexX,lastIndexY,centrePoseX,centrePoseY =pointMain(fingers_matrix,landmark_matrix[8][0],landmark_matrix[8][1],opQueue, lastIndexX,lastIndexY,centrePoseX,centrePoseY)
+
 
             mm_end_time = time.time()
             mm_module_time += mm_end_time - mm_start_time
@@ -96,20 +128,19 @@ def main():
             mm_prev_time=mm_start_time
 
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+
+        cv2.imshow('MediaPipe Hands', cv2.flip(resize(image, width=500, height=500), 1))
 
         end_time = time.time()
         total_time += end_time - start_time
         total_itrs += 1
-        if (cv2.waitKey(5) & 0xFF == 27):
-            #print index finger tip coordinates
-            # print("Index finger tip coordinates: ",landmark_matrix[8][0])
+        if (cv2.waitKey(5) & 0xFF == 27):# or returnfrommm==-1 :
             break
 
     cap.release()
     cv2.destroyAllWindows()
     print("Average FPS: ", total_itrs / total_time)
-    print("Average time per frame: ", total_time/total_itrs,"ns")
+    # # print("Average time per frame: ", total_time/total_itrs,"ns")
     print("Time taken by mouseMovement module : ",(mm_module_time/total_time)*100,"%")
     print("Time taken by MediaPipe detection : ",100-(mm_module_time/total_time)*100,"%")
 
