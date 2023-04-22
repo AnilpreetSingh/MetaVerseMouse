@@ -1,21 +1,17 @@
 import cv2
 import mediapipe as mp
-import mouseMovement as mm
+from mouseMovement import pointMain
 import time
-import imutils
-import numpy as np
+from  imutils import resize
 #--------------------------------------------------------------------------------------------------------------------------
-
 
 def detectHands(image, hands, draw=True,flipType=True):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) #Mediapipe works in RGB
-    image = imutils.resize(image, width=900, height=900)
+    image = resize(image, width=900, height=900)
     results = hands.process(image) # using the hands object to process the image
     image.flags.writeable = True
 
 
-    for1=0
-    for2=0
     landmark_matrix=[]
     handTypeLoR="Right"
     if results.multi_hand_landmarks:
@@ -48,7 +44,13 @@ def draw_landmarks(image,hand_landmarks):
 
 
 def main():
+
+    cameraresX=900
+    cameraresY=900
+    # mm.setglobalvars(cameraresX,cameraresY)
     cap=cv2.VideoCapture(0)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, cameraresX)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, cameraresY)
     
     mp_hands = mp.solutions.hands
     hands= mp_hands.Hands(
@@ -74,6 +76,7 @@ def main():
         start_time = time.time()
 
         success, image=cap.read() 
+        # print(image.shape)
         if not success:
             continue
 
@@ -85,14 +88,12 @@ def main():
 
             # functions that operates the mouse 
 
-            fingers_matrix=mm.pointMain(landmark_matrix,handType)
+            fingers_matrix=pointMain(landmark_matrix,handType)
 
             mm_end_time = time.time()
             mm_module_time += mm_end_time - mm_start_time
 
-        
-        
-            # cv2.putText(image,str(int(fingers_matrix)) , (10, 70), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)#str(''.join(map(str, fingers_matrix)))
+
             mm_prev_time=mm_start_time
 
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
