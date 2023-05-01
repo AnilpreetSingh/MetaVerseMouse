@@ -4,8 +4,19 @@ from mouseMovement import pointMain
 import time
 from  imutils import resize
 import queue
+import tracemalloc
+
 #--------------------------------------------------------------------------------------------------------------------------
-   
+def tracing_start():
+    tracemalloc.stop()
+    tracemalloc.start()
+def tracing_mem():
+    first_size, first_peak = tracemalloc.get_traced_memory()
+    peak = first_peak/(1024*1024)
+    print("Peak Size in MB - ", peak)
+
+
+ 
 def detectfingers(landmark_matrix,myHandType):
     tipIds = [4, 8, 12, 16, 20]
     if landmark_matrix:
@@ -40,7 +51,6 @@ def detectHands(image, hands, draw=True,flipType=True):
     landmark_matrix=[]
     handTypeLoR="Right"
     if results.multi_hand_landmarks:
-        no_of_hands=0    # why is this here?
         for handType, handLms in zip(results.multi_handedness, results.multi_hand_landmarks):
 
             if flipType:
@@ -69,7 +79,7 @@ def draw_landmarks(image,hand_landmarks):
 
 
 def main():
-
+    tracing_start()
   
     # mm.setglobalvars(cameraresX,cameraresY)
     cap=cv2.VideoCapture(0)
@@ -81,12 +91,9 @@ def main():
         model_complexity=1,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.75,
-
         max_num_hands=1,
-        # static_image_mode=False
     )
 
-    # mm_variables=mm.vars()
 
 
     #timekeeping vars
@@ -129,7 +136,7 @@ def main():
 
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        cv2.imshow('MediaPipe Hands', cv2.flip(resize(image, width=500, height=500), 1))
+        cv2.imshow('Metaverse Mouse', cv2.flip(resize(image, width=500, height=500), 1))
 
         end_time = time.time()
         total_time += end_time - start_time
@@ -143,6 +150,7 @@ def main():
     # # print("Average time per frame: ", total_time/total_itrs,"ns")
     print("Time taken by mouseMovement module : ",(mm_module_time/total_time)*100,"%")
     print("Time taken by MediaPipe detection : ",100-(mm_module_time/total_time)*100,"%")
+    tracing_mem()
 
 if __name__ == "__main__":
     main()

@@ -150,10 +150,14 @@ def pointMain(mm,indxX,indxY,opQueue,lastIndexX,lastIndexY,centrePoseX,centrePos
             
             elif mm==[0,1,1,0,0]:                            #scrol
 
+                if lastElem == dictop["2fc"]:
+                    pyautogui.press('enter')
+
                 if lastElem != dictop["2fup"]\
                       and lastElem != dictop["2fdown"]\
-                          and lastElem != dictop["2fleft"]\
                              and lastElem != dictop["2fright"]:       #if last operation is not scroll 
+                    
+
                     centrePoseX,centrePoseY=indxX,indxY
                     opQueue=opQueueAdd(opQueue,"2fup")
                 else:
@@ -163,6 +167,7 @@ def pointMain(mm,indxX,indxY,opQueue,lastIndexX,lastIndexY,centrePoseX,centrePos
                     elif dirxn==0:
                         pyautogui.scroll(scrollSpeed)
                         opQueue=opQueueAdd(opQueue,"2fup")
+
                     elif dirxn==1:
                         pyautogui.scroll(-scrollSpeed)
                         opQueue=opQueueAdd(opQueue,"2fdown")
