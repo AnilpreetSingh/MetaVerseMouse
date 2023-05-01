@@ -6,6 +6,6 @@
 #### opencv-python: Version: 4.6.0.66
 #### imutils: Version: 0.5.4
 #### PyAutoGUI: Version: 0.9.53
-## The the gestures and their respective operations
+## The gestures and their respective operations
 ![gestures](https://github.com/Anilluh/MetaVerseMouse/blob/main/assets/gestures.jpg)
 ## 
